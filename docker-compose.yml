@@ -1,0 +1,133 @@
+version: '3.8'
+
+services:
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./backend/api-gateway
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - auth-service
+      - patient-service
+      - doctor-service
+      - notification-service
+    networks:
+      - cdss-network
+
+  # Auth Service
+  auth-service:
+    build:
+      context: ./backend/auth-service
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DATABASE_URL=jdbc:postgresql://postgres:5432/cdss_auth
+      - DATABASE_USERNAME=cdss_user
+      - DATABASE_PASSWORD=cdss_password
+    depends_on:
+      - postgres
+    networks:
+      - cdss-network
+
+  # Patient Service
+  patient-service:
+    build:
+      context: ./backend/patient-service
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DATABASE_URL=jdbc:postgresql://postgres:5432/cdss_patient
+      - DATABASE_USERNAME=cdss_user
+      - DATABASE_PASSWORD=cdss_password
+    depends_on:
+      - postgres
+    networks:
+      - cdss-network
+
+  # Doctor Service
+  doctor-service:
+    build:
+      context: ./backend/doctor-service
+      dockerfile: Dockerfile
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DATABASE_URL=jdbc:postgresql://postgres:5432/cdss_doctor
+      - DATABASE_USERNAME=cdss_user
+      - DATABASE_PASSWORD=cdss_password
+    depends_on:
+      - postgres
+    networks:
+      - cdss-network
+
+  # Notification Service
+  notification-service:
+    build:
+      context: ./backend/notification-service
+      dockerfile: Dockerfile
+    ports:
+      - "8084:8084"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - cdss-network
+
+  # AI Service (Python)
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - MODEL_PATH=/app/models
+    volumes:
+      - ./ai-service/models:/app/models
+    networks:
+      - cdss-network
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=cdss_user
+      - POSTGRES_PASSWORD=cdss_password
+      - POSTGRES_DB=cdss
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - cdss-network
+
+  # React Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8080
+    depends_on:
+      - api-gateway
+    networks:
+      - cdss-network
+
+volumes:
+  postgres_data:
+
+networks:
+  cdss-network:
+    driver: bridge
+

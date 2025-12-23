@@ -1,0 +1,71 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Frontend (React)
+frontend/node_modules/
+frontend/build/
+frontend/dist/
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# Backend (Java)
+backend/**/target/
+backend/**/.classpath
+backend/**/.project
+backend/**/.settings/
+backend/**/*.iml
+backend/**/.gradle/
+backend/**/build/
+*.jar
+*.war
+*.ear
+
+# Python (AI Service)
+ai-service/__pycache__/
+ai-service/*.py[cod]
+ai-service/*$py.class
+ai-service/*.so
+ai-service/.Python
+ai-service/venv/
+ai-service/env/
+ai-service/.venv
+ai-service/pip-log.txt
+ai-service/pip-delete-this-directory.txt
+ai-service/.pytest_cache/
+ai-service/.mypy_cache/
+ai-service/.dmypy.json
+ai-service/dmypy.json
+ai-service/*.egg-info/
+ai-service/dist/
+ai-service/build/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+
+# Docker
+docker-compose.override.yml
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
