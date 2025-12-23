@@ -1,4 +1,5 @@
 # Clinical Decision Support System (CDSS)
+# Design architect: Captain Ali Durna of the Atılgan ship.
 
 Clinical Decision Support System (CDSS), hem doktorlar hem de hastalar için tasarlanmış kapsamlı bir klinik karar destek sistemidir. Doktorlar için, hasta verilerini hızlıca analiz ederek tanı, tedavi ve ilaç önerileri sunan akıllı bir asistan görevi görür. Sistem, hasta geçmişi, laboratuvar sonuçları, ilaç bilgileri ve diğer klinik verileri bir araya getirerek, kanıta dayalı tıp prensiplerine uygun öneriler üretir ve doktorların daha doğru kararlar vermesine yardımcı olur.
 
