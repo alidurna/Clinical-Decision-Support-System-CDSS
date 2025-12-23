@@ -53,7 +53,7 @@ API Gateway: http://localhost:8080
 AI Service: http://localhost:5000
 
 ### Geliştirme Modu
-
+PROJE YAPIM AŞAMASINDA
 Her servis ayrı ayrı çalıştırılabilir. Detaylar için ilgili servis klasöründeki README dosyalarına bakın.
 
 ## 🔧 Teknolojiler
