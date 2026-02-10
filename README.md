@@ -9,68 +9,91 @@ CDSS, gerçek zamanlı veri analizi yaparak kritik durumlarda hem doktorlara hem
 
 ## 🏗️ Mimari
 
-Proje mikro servis mimarisi ile geliştirilmiştir:
+Proje **mikro servis** (backend) ve **micro frontend** (frontend) mimarisi ile geliştirilmiştir:
 
-- **Frontend**: React.js
+- **Frontend**: React, TypeScript, Vite — **Micro Frontend** (Module Federation), pnpm workspace
 - **Backend**: Java Spring Boot (Mikro Servisler)
 - **AI Service**: Python (Flask/FastAPI)
 - **Database**: PostgreSQL
 - **Orchestration**: Docker & Docker Compose
 
+## 📱 Micro Frontend (Frontend Mimarisi)
+
+Frontend, **Module Federation** (Vite plugin) ile parçalara ayrılmıştır; her uygulama bağımsız geliştirilebilir ve tek shell içinde birleştirilir.
+
+| Uygulama   | Klasör        | Port | Açıklama |
+|------------|---------------|------|----------|
+| **Shell**  | `apps/shell`  | 5173 | Ana uygulama (host): routing, tema, remote’ları yükler |
+| **Auth**   | `apps/auth`   | 5174 | Giriş sayfası (Login) — remote |
+| **Dashboard** | `apps/dashboard` | 5175 | Dashboard sayfası — remote |
+
+- **pnpm workspace**: Tüm frontend uygulamaları `apps/` altında, tek `pnpm install` ile kurulur.
+- Detaylı anlatım: [apps/README.md](apps/README.md)
+
 ## 📁 Proje Yapısı
 
 ```
 Clinical-Decision-Support-System-CDSS/
-├── apps/                     # Micro frontend uygulamaları
-│   ├── shell/               # Ana uygulama (host), port 5173
-│   ├── auth/                # Giriş micro frontend, port 5174
-│   └── dashboard/            # Dashboard micro frontend, port 5175
+├── apps/                        # Micro frontend (pnpm workspace)
+│   ├── shell/                   # Host uygulama — port 5173
+│   ├── auth/                    # Login remote — port 5174
+│   └── dashboard/               # Dashboard remote — port 5175
 ├── backend/
-│   ├── api-gateway/         # API Gateway servisi
-│   ├── auth-service/        # Kimlik doğrulama servisi
-│   ├── patient-service/     # Hasta yönetim servisi
-│   ├── doctor-service/      # Doktor yönetim servisi
-│   └── notification-service/# Bildirim servisi
-├── ai-service/              # Python AI/ML servisi
-├── docker/                  # Docker yapılandırmaları
-└── docker-compose.yml       # Servis orchestration
+│   ├── api-gateway/             # API Gateway — port 8080
+│   ├── auth-service/            # Kimlik doğrulama
+│   ├── patient-service/         # Hasta yönetimi
+│   ├── doctor-service/          # Doktor yönetimi
+│   └── notification-service/   # Bildirim servisi
+├── ai-service/                  # Python AI/ML servisi — port 5000
+├── docker/                      # Docker yapılandırmaları
+├── package.json                 # Kök script'ler (pnpm dev, pnpm build)
+├── pnpm-workspace.yaml          # Workspace tanımı (apps/*)
+└── docker-compose.yml           # Tüm servisler
 ```
 
 ## 🚀 Hızlı Başlangıç
 
 ### Gereksinimler
 
-- Docker & Docker Compose
-- **pnpm** (önerilen) veya Node.js 18+ (Frontend / micro frontend geliştirme için)
-- Java 17+ (Backend geliştirme için)
-- Python 3.9+ (AI servis geliştirme için)
+- **pnpm** (frontend için önerilen) veya Node.js 18+
+- Docker & Docker Compose (tüm stack için)
+- Java 17+ (backend geliştirme)
+- Python 3.9+ (AI servisi geliştirme)
 
-### Frontend (Micro Frontend) – pnpm
+### Frontend çalıştırma (Micro Frontend)
 
 ```bash
-pnpm install    # Tüm apps bağımlılıkları
-pnpm dev       # Shell + Auth + Dashboard paralel
+# Bağımlılıkları kur (proje kökünden)
+pnpm install
+
+# Shell + Auth + Dashboard'u paralel başlat
+pnpm dev
 ```
 
-Ana uygulama: http://localhost:5173 (detay: `apps/README.md`)
+- **Ana uygulama:** http://localhost:5173  
+- Login ve Dashboard bu adres üzerinden remote olarak yüklenir.
 
-### Tüm Servisleri Çalıştırma
+Tek tek çalıştırmak: `pnpm dev:shell` | `pnpm dev:auth` | `pnpm dev:dashboard`
+
+### Tüm servisleri Docker ile çalıştırma
 
 ```bash
 docker-compose up -d
 ```
 
-Frontend: http://localhost:3000
-API Gateway: http://localhost:8080
-AI Service: http://localhost:5000
+| Servis      | Adres |
+|-------------|--------|
+| Frontend    | http://localhost:3000 |
+| API Gateway | http://localhost:8080 |
+| AI Service  | http://localhost:5000 |
 
-### Geliştirme Modu
-PROJE YAPIM AŞAMASINDA
-Her servis ayrı ayrı çalıştırılabilir. Detaylar için ilgili servis klasöründeki README dosyalarına bakın.
+### Geliştirme modu
+
+Her servis ayrı ayrı çalıştırılabilir. Detaylar için ilgili klasördeki README dosyalarına bakın (örn. `apps/README.md`, `apps/shell/README.md`).
 
 ## 🔧 Teknolojiler
 
-- **Frontend**: React, TypeScript, Material-UI
+- **Frontend**: React, TypeScript, Vite, Material-UI, Module Federation (micro frontend), pnpm workspace
 - **Backend**: Spring Boot, Spring Cloud, JPA
 - **AI/ML**: Python, TensorFlow/PyTorch, scikit-learn
 - **Database**: PostgreSQL
