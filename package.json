@@ -1,0 +1,14 @@
+{
+  "name": "cdss",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Clinical Decision Support System - Monorepo",
+  "scripts": {
+    "dev": "pnpm -r --parallel run dev",
+    "dev:shell": "pnpm --filter cdss-frontend dev",
+    "dev:auth": "pnpm --filter cdss-auth dev",
+    "dev:dashboard": "pnpm --filter cdss-dashboard dev",
+    "build": "pnpm -r run build",
+    "build:apps": "pnpm -r --filter cdss-frontend --filter cdss-auth --filter cdss-dashboard run build"
+  }
+}

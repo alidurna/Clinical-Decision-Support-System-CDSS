@@ -21,7 +21,10 @@ Proje mikro servis mimarisi ile geliştirilmiştir:
 
 ```
 Clinical-Decision-Support-System-CDSS/
-├── frontend/                 # React frontend uygulaması
+├── apps/                     # Micro frontend uygulamaları
+│   ├── shell/               # Ana uygulama (host), port 5173
+│   ├── auth/                # Giriş micro frontend, port 5174
+│   └── dashboard/            # Dashboard micro frontend, port 5175
 ├── backend/
 │   ├── api-gateway/         # API Gateway servisi
 │   ├── auth-service/        # Kimlik doğrulama servisi
@@ -38,9 +41,18 @@ Clinical-Decision-Support-System-CDSS/
 ### Gereksinimler
 
 - Docker & Docker Compose
-- Node.js 18+ (Frontend geliştirme için)
+- **pnpm** (önerilen) veya Node.js 18+ (Frontend / micro frontend geliştirme için)
 - Java 17+ (Backend geliştirme için)
 - Python 3.9+ (AI servis geliştirme için)
+
+### Frontend (Micro Frontend) – pnpm
+
+```bash
+pnpm install    # Tüm apps bağımlılıkları
+pnpm dev       # Shell + Auth + Dashboard paralel
+```
+
+Ana uygulama: http://localhost:5173 (detay: `apps/README.md`)
 
 ### Tüm Servisleri Çalıştırma
 

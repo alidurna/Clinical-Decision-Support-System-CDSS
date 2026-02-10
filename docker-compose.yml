@@ -110,13 +110,13 @@ services:
     networks:
       - cdss-network
 
-  # React Frontend
+  # React Frontend (shell - nginx listens on 80 inside container)
   frontend:
     build:
-      context: ./frontend
+      context: ./apps/shell
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "3000:80"
     environment:
       - REACT_APP_API_URL=http://localhost:8080
     depends_on:

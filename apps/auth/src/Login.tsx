@@ -16,7 +16,6 @@ const Login = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Implement login logic
     console.log('Login:', { email, password })
     navigate('/dashboard')
   }
@@ -71,4 +70,3 @@ const Login = () => {
 }
 
 export default Login
-
