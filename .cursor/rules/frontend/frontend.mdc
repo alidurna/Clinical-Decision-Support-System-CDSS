@@ -1,0 +1,126 @@
+---
+description: Frontend kuralları — apps/ için tüm kurallar tek dosyada birleşik özet (Google 2026 Standards)
+globs: apps/**/*
+alwaysApply: false
+---
+
+# 🎯 Frontend Kuralları (Birleşik Özet)
+
+**Versiyon:** 2.0.0 — Google 2026 Standards
+**Kapsam:** `apps/shell`, `apps/auth`, `apps/dashboard`
+**Portlar:** 5173, 5174, 5175
+**Stack:** React 18, TypeScript, Vite, MUI, Module Federation, pnpm
+
+Çalıştırma: kökten `pnpm install` → `pnpm dev`.
+
+---
+
+## ⚠️ KRİTİK: HOVER YASAĞI + ONAY SÜRECİ
+
+- 🚫 **HOVER YASAK:** `hover:*`, `:hover`, `whileHover` → YASAK. `active:*`, `focus:*` kullan.
+- 🚨 **ONAY ZORUNLU:** Kod değişikliği öncesi "Başlama Raporu" oluştur, onay bekle.
+
+---
+
+## 1. React & TypeScript
+
+- **Fonksiyonel bileşen** kullan; class component yasak.
+- Dosya adı = Bileşen adı, PascalCase: `Login.tsx` → `export default Login`. Bir dosyada tek ana bileşen.
+- `any` kullanma; props için `interface`, event için `React.FormEvent` / `React.ChangeEvent<HTMLInputElement>`.
+- **Hook:** `useState` (basit), karmaşık state → `useReducer`. `useEffect` bağımlılık dizisi eksiksiz. Custom hook: `use` prefixi. Context sadece global state için.
+- **Import sırası:** React → üçüncü parti → proje içi → tipler → CSS.
+- **Performans:** Büyük listeler `React.memo`/`useMemo`; remote/büyük sayfalar `React.lazy` + `Suspense`.
+- **Cleanup:** `useEffect`'te `AbortController` veya return cleanup kullan.
+- **Yasak:** `any`, class component, `dangerouslySetInnerHTML`, `<div onClick>`, boş catch, console.log (prod).
+
+---
+
+## 2. Design System
+
+### Renk
+- Sabit hex yasak. `theme.palette.*` veya MUI `color` prop. primary/secondary/error/success; text.primary, text.secondary.
+- Glassmorphism: `bg-white/15`, `backdrop-blur-xl`, `border-white/30`.
+
+### Tipografi
+- Sayfa başlığı `h4`, bölüm `h5`/`h6`, açıklama `body1` + `text.secondary`, gövde `body1`, küçük metin `body2`/`caption`. `gutterBottom` kullan.
+
+### Spacing (8px Grid)
+- `sx={{ p: 3, mt: 2, gap: 2 }}`; sabit piksel yasak.
+
+### Standart Boyutlar (R1601-R1612 — ZORUNLU)
+- **Text:** Section başlık `text-base`, alt başlık `text-sm`, normal `text-xs`, küçük `text-[10px]`.
+- **Icon:** Container `w-6 h-6`, standart `w-4 h-4`, buton `w-3 h-3`, küçük `w-2.5 h-2.5`.
+- **Padding:** Kart `p-3`, modal `p-4`, kompakt `p-2`.
+- **Buton:** `px-2 py-1.5 text-xs font-medium rounded-lg`.
+- **Input:** `px-2 py-1 text-xs rounded-lg`.
+- **Gap:** Sıkı `gap-1`, küçük `gap-1.5`, standart `gap-2`, büyük `gap-3`.
+- **Radius:** Standart `rounded-lg` (8px). Büyük `rounded-xl`, en büyük `rounded-2xl`.
+
+### Layout
+- Container `<Container maxWidth="lg">` (veya md/sm). MUI `Grid`, xs/sm/md/lg. Mobile-first.
+
+### Bileşen
+- Kart `Paper`, form `TextField` fullWidth margin="normal" required, ana buton `variant="contained"`, ikincil `outlined`, tehlikeli `color="error"`, yükleme `CircularProgress`/`Skeleton`, bildirim `Alert`/`Snackbar`.
+
+### Etkileşim
+- `active:scale-95 active:opacity-90 transition-all` → tıklama geri bildirimi.
+- `focus:ring-2 focus:ring-blue-500` → klavye navigasyonu.
+
+---
+
+## 3. API Entegrasyonu
+
+- Tüm istekler **axios** instance; `src/services/` veya `src/api/`. Base URL: `VITE_API_URL` (default `http://localhost:8080`).
+- RESTful: GET/POST/PUT/DELETE. Path kebab-case, çoğul. İstek/yanıt için TypeScript `interface`.
+- Interceptor ile JWT token ekleme ve 401 yönlendirme.
+- Her çağrı **try/catch**; 401 → login'e yönlendir, 403 → uyarı, 500/network → Türkçe mesaj.
+- **Loading:** Her API için `loading` state; `CircularProgress`/Skeleton veya butonda disabled + spinner.
+- **AbortController:** Uzun isteklerde ve unmount'ta isteği iptal et.
+
+---
+
+## 4. Erişilebilirlik (a11y) — WCAG 2.1 AA
+
+- Her form alanı **label** veya **aria-label**; placeholder tek başına label değil. Buton anlamlı metin veya aria-label.
+- Görsel: `alt` zorunlu; dekoratif → `alt=""` + `aria-hidden="true"`. Kontrast en az 4.5:1.
+- Klavye: Tüm etkileşimli elementler Tab ile erişilebilir; focus görünür. `focus-visible` kullan.
+- Başlık hiyerarşisi h1→h2→h3. Listeler `<ul>`/`<ol>`. `<div onClick>` yasak.
+- IconButton'da `aria-label` zorunlu.
+
+---
+
+## 5. Hata Yönetimi
+
+- Hata mesajı **Türkçe**, net; teknik detay kullanıcıya gösterilmez.
+- Form validasyon → `helperText`; API 4xx → Alert error; 5xx/ağ → Snackbar/Alert. Boş veri → empty state.
+- **Error Boundary** + **Suspense** ile remote bileşenleri sar; shell'de genel fallback.
+- Kullanıcı verisi loglanmaz; `catch (e) {}` boş bırakma.
+
+---
+
+## 6. Test
+
+- Bileşen/hook için en az 1 test; dosya bileşenin yanında.
+- `describe`/`it` yapısı; ne test ettiği açık.
+- Bileşen: render, etkileşim, state (React Testing Library). Hook: `renderHook`. API: mock (msw).
+- `data-testid` kullan; CSS selector ile seçme. Gerçek backend'e istek yok.
+- `userEvent` > `fireEvent`. Snapshot minimum; davranış testi öncelikli.
+- Coverage: %60+ minimum, kritik bileşenler %90+.
+
+---
+
+## 7. İsimlendirme
+
+- **Dosya:** Bileşen PascalCase, hook `useAuth.ts`, servis `authService.ts`, test `Login.test.tsx`.
+- **Değişken:** camelCase; boolean `is`/`has`/`should`; fonksiyon fiil ile; handler `handle`; callback prop `on`.
+- **Sabit:** UPPER_SNAKE; interface/type PascalCase.
+- **Klasör:** `pages/`, `components/`, `services/`, `hooks/` (kebab-case).
+
+---
+
+## 8. Güvenlik
+
+- JWT token; isteklerde `Authorization: Bearer <token>`. Route koruması **PrivateRoute** (isAuthenticated + rol).
+- Şifre `type="password"`. Kişisel veri loglanmaz. API key/secret `.env`; `.env` git'e eklenmez.
+- `dangerouslySetInnerHTML` ile kullanıcı girdisi render edilmez. Form: required + email/şifre validasyonu (min 8).
+- CORS, CSP, HSTS header'ları düzgün yapılandırılır.

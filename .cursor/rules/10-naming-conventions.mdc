@@ -1,0 +1,93 @@
+---
+description: İsimlendirme kuralları — dosya, değişken, fonksiyon, CSS, klasör isimlendirme standartları (Google 2026 Standards)
+alwaysApply: true
+---
+
+# 📝 İsimlendirme Kuralları
+
+**Versiyon:** 2.0.0 — Google 2026 Standards
+**Öncelik:** 🔴 P0 — Kritik
+**Kapsam:** Tüm proje dosyaları
+
+---
+
+## Dosya İsimleri
+
+| Tip | Format | Örnek | Açıklama |
+|-----|--------|-------|----------|
+| React bileşen | PascalCase | `Login.tsx`, `PatientCard.tsx` | Bileşen adı = dosya adı |
+| Hook | camelCase, `use` prefixi | `useAuth.ts`, `usePatients.ts` | Her zaman `use` ile başlar |
+| Servis/API | camelCase | `authService.ts`, `apiClient.ts` | İş mantığı katmanı |
+| Util/helper | camelCase | `formatDate.ts`, `validators.ts` | Yardımcı fonksiyonlar |
+| Test | bileşen adı + `.test` | `Login.test.tsx` | Bileşenin yanında |
+| CSS | bileşen adı veya kebab-case | `Login.css`, `index.css` | — |
+| Sabit/config | camelCase veya UPPER_SNAKE | `constants.ts`, `config.ts` | — |
+| Interface/Type dosyası | camelCase veya `types` | `types.ts`, `patient.types.ts` | — |
+
+---
+
+## Değişken ve Fonksiyon İsimleri
+
+| Tip | Format | Örnek | Kural |
+|-----|--------|-------|-------|
+| Değişken | camelCase | `patientList`, `isLoading` | Anlamlı, açıklayıcı isim |
+| Boolean | `is`/`has`/`should`/`can` prefixi | `isAuthenticated`, `hasPermission` | **Zorunlu** prefix |
+| Fonksiyon | camelCase, fiil ile başlar | `fetchPatients`, `calculateScore` | Her zaman fiil |
+| Event handler | `handle` + olay | `handleClick`, `handleSubmit` | **Zorunlu** `handle` prefix |
+| Callback prop | `on` + olay | `onClick`, `onSubmit` | **Zorunlu** `on` prefix |
+| Sabit | UPPER_SNAKE_CASE | `MAX_RETRIES`, `API_BASE_URL` | Değişmeyen değerler |
+| Interface | PascalCase | `Patient`, `LoginRequest` | `I` prefixi **kullanma** |
+| Type alias | PascalCase | `UserRole`, `RequestState` | — |
+| Enum | PascalCase, değerler UPPER_SNAKE | `UserRole.ADMIN` | — |
+| Array | Çoğul isim | `patients`, `errors` | Tekil **yasak** |
+
+---
+
+## Klasör İsimleri
+
+| İçerik | Format | Örnek |
+|--------|--------|-------|
+| Sayfa | kebab-case veya PascalCase | `pages/`, `components/` |
+| Servis | kebab-case | `services/`, `api/` |
+| Hook | kebab-case | `hooks/` |
+| Shared/ortak | kebab-case | `shared/`, `common/` |
+| Mikro servis | kebab-case | `auth-service/`, `patient-service/` |
+| Micro frontend | kebab-case | `shell/`, `auth/`, `dashboard/` |
+
+---
+
+## Backend İsimlendirme (Java/Spring)
+
+| Tip | Format | Örnek |
+|-----|--------|-------|
+| Package | lowercase, noktalı | `com.cdss.auth` |
+| Class | PascalCase | `AuthController`, `PatientService` |
+| Method | camelCase | `findPatientById`, `createUser` |
+| Variable | camelCase | `patientId`, `accessToken` |
+| Constant | UPPER_SNAKE | `MAX_LOGIN_ATTEMPTS` |
+| Controller | `*Controller` suffix | `AuthController` |
+| Service | `*Service` suffix | `PatientService` |
+| Repository | `*Repository` suffix | `PatientRepository` |
+| DTO | `*Request` / `*Response` suffix | `LoginRequest`, `PatientResponse` |
+
+---
+
+## CSS İsimlendirme
+
+| Format | Kullanım | Örnek |
+|--------|----------|-------|
+| kebab-case | CSS sınıf | `.patient-card`, `.login-form` |
+| BEM (opsiyonel) | Karmaşık bileşenler | `.card__header--active` |
+| camelCase | CSS Modules | `styles.patientCard` |
+
+---
+
+## ❌ İsimlendirme Yasakları
+
+1. ❌ Tek harfli değişken (döngü hariç: `i`, `j`)
+2. ❌ Kısaltma (açık isim kullan: `btn` → `button`, `msg` → `message`)
+3. ❌ Türkçe karakter (ı, ö, ü, ç, ş, ğ)
+4. ❌ Sayı ile başlayan isim
+5. ❌ Boolean'da `is`/`has` prefix olmadan (`loading` → `isLoading`)
+6. ❌ Interface'de `I` prefixi (`IPatient` → `Patient`)
+7. ❌ Genel/anlamsız isimler (`data`, `info`, `temp`, `item`)

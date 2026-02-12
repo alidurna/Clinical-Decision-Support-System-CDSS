@@ -1,0 +1,106 @@
+---
+description: Erişilebilirlik (a11y) kuralları — WCAG 2.1 AA, klavye navigasyonu, semantik HTML, ARIA (Google 2026 Standards)
+globs: apps/**/*.tsx
+alwaysApply: false
+---
+
+# ♿ Erişilebilirlik (Accessibility — a11y)
+
+**Versiyon:** 2.0.0 — Google 2026 Standards
+**Öncelik:** 🔴 P0 — Kritik
+**Standart:** WCAG 2.1 AA
+
+---
+
+## Zorunlu Kurallar
+
+### 1. Form Elemanları
+- Her form alanı **`label`** veya **`aria-label`** zorunlu.
+- **Placeholder tek başına label değildir.**
+- Hata mesajları `aria-describedby` ile bağlanır.
+
+```tsx
+// ✅ DOĞRU
+<TextField label="Email" required aria-describedby="email-error" />
+{error && <FormHelperText id="email-error" error>{error}</FormHelperText>}
+
+// ❌ YANLIŞ
+<input placeholder="Email girin" />  {/* Label yok! */}
+```
+
+### 2. Butonlar ve Etkileşimli Elementler
+- İçeriği **anlamlı metin**; sadece ikon varsa **`aria-label`** ekle.
+- `<div onClick>` **yasak**; `<button>` veya MUI `Button` kullan.
+- İnteraktif elementler `tabIndex` sırasına uygun olmalı.
+
+```tsx
+// ✅ DOĞRU
+<IconButton aria-label="Profili düzenle"><EditIcon /></IconButton>
+
+// ❌ YANLIŞ
+<div onClick={handleEdit}><EditIcon /></div>
+```
+
+### 3. Görseller
+- `<img>` → **`alt`** zorunlu.
+- Dekoratif görsel: `alt=""` ve `aria-hidden="true"`.
+- Bilgi taşıyan SVG: `role="img"` + `aria-label`.
+
+### 4. Renk Kontrastı
+- Metin/arkaplan minimum **4.5:1** (WCAG AA).
+- Büyük metin (18px+ veya 14px+ bold): **3:1**.
+- Renk **tek başına bilgi taşımamalı** (ikon veya metin de kullan).
+
+### 5. Klavye Navigasyonu
+- Tüm etkileşimli elementler **Tab** ile erişilebilir.
+- **Focus göstergesi** görünür olmalı (asla `outline: none` kullanma).
+- `focus-visible` kullan: klavye focus'unu göster, mouse click'te gizle.
+- Escape tuşu: modal/dialog kapatma.
+- Enter/Space: buton aktivasyonu.
+
+---
+
+## Semantik HTML
+
+| İhtiyaç | Kullan | Kullanma |
+|---------|--------|----------|
+| Navigasyon | `<nav>` | `<div class="nav">` |
+| Ana içerik | `<main>` | `<div class="main">` |
+| Bölüm | `<section>` + `aria-label` | `<div>` |
+| Liste | `<ul>` / `<ol>` / `<li>` | `<div>` ile liste |
+| Başlık | `<h1>` → `<h6>` (sıralı) | Atlama yapma |
+| Form | `<form>` | `<div>` |
+| Buton | `<button>` | `<div onClick>` |
+
+---
+
+## ARIA Kullanım Kuralları
+
+- **Semantik HTML önce gelir**; ARIA sadece HTML yetersiz kaldığında.
+- `aria-live="polite"` → Dinamik içerik güncellemeleri (bildirimler).
+- `aria-busy="true"` → Yükleniyor durumu.
+- `aria-expanded` → Açılır menüler, accordion.
+- `aria-selected` → Seçili tab, liste öğesi.
+- `role="alert"` → Acil bildirimler (MUI `Alert` otomatik yapar).
+
+---
+
+## MUI Erişilebilirlik İpuçları
+
+| Bileşen | Otomatik | Ek Gereksinim |
+|---------|----------|---------------|
+| `TextField` | Label bağlar | — |
+| `IconButton` | — | `aria-label` **zorunlu** |
+| `Alert` | `role="alert"` | — |
+| `Dialog` | Focus trap + `aria-labelledby` | — |
+| `Tabs` | `aria-label` / `aria-labelledby` | Tab panel'lere `role="tabpanel"` |
+| `Tooltip` | — | Trigger'da `aria-describedby` |
+
+---
+
+## Test Araçları
+
+- **axe-core** → Otomatik a11y denetimi.
+- **Lighthouse** → Accessibility skoru (%90+ hedef).
+- **Klavye testi** → Tab, Enter, Escape, ok tuşları ile tüm akışı test et.
+- **Screen reader** → VoiceOver (macOS) ile kontrol et.

@@ -1,0 +1,101 @@
+---
+description: Git workflow — branch stratejisi, commit kuralları, PR süreci, CI/CD (Google 2026 Standards)
+alwaysApply: true
+---
+
+# 🔀 Git Workflow
+
+**Versiyon:** 2.0.0 — Google 2026 Standards
+**Öncelik:** 🔴 P0 — Kritik
+
+---
+
+## Branch Stratejisi
+
+| Tip | Format | Örnek | Açıklama |
+|-----|--------|-------|----------|
+| Ana | `main` | — | Üretim kodu; doğrudan commit **yasak** |
+| Geliştirme | `develop` | — | Entegrasyon branch'i (opsiyonel) |
+| Özellik | `feature/<isim>` | `feature/login` | Yeni özellik |
+| Düzeltme | `fix/<isim>` | `fix/login-validation` | Hata düzeltme |
+| İyileştirme | `improve/<isim>` | `improve/dashboard-perf` | Refactor/performans |
+| Acil | `hotfix/<isim>` | `hotfix/auth-crash` | Acil üretim düzeltmesi |
+
+### Branch Kuralları
+- `main`'e sadece **Pull Request** ile merge yapılır.
+- Branch ismi kısa, kebab-case, **İngilizce**.
+- Bir branch **tek bir iş birimi**ni temsil eder.
+- Feature branch'i `main`'den ayrılır, merge öncesi rebase yapılır.
+- **Proje branch'leri:** `feature/intro`, `feature/login`, `feature/register` (görev dağılımı: `CONTRIBUTING.md`).
+
+---
+
+## Commit Mesajları (Conventional Commits)
+
+```
+<tip>(<kapsam>): <kısa açıklama>
+
+[Opsiyonel detay paragrafı]
+
+[Opsiyonel footer: BREAKING CHANGE, Closes #issue]
+```
+
+| Tip | Ne Zaman |
+|-----|----------|
+| `feat` | Yeni özellik |
+| `fix` | Hata düzeltme |
+| `style` | CSS/UI değişikliği (davranış değişmez) |
+| `refactor` | Kod iyileştirme (özellik/hata yok) |
+| `docs` | Doküman değişikliği |
+| `chore` | Build, config, bağımlılık |
+| `test` | Test ekleme/güncelleme |
+| `perf` | Performans iyileştirme |
+| `ci` | CI/CD pipeline değişikliği |
+
+### Commit Kuralları
+- İlk satır **72 karakter** sınırında, küçük harfle başlar.
+- Kapsam (scope) belirtmeyi tercih et: `feat(auth): login validasyonu eklendi`.
+- `Co-authored-by` satırı ile birlikte çalışanı belirt.
+- **Atomik commit:** Her commit tek bir mantıksal değişikliği temsil eder.
+
+---
+
+## Pull Request Süreci
+
+1. PR açmadan önce `main`'den rebase al: `git pull --rebase origin main`.
+2. PR başlığı commit formatını takip eder: `feat(auth): login sayfası eklendi`.
+3. PR açıklamasında **ne değişti**, **neden değişti**, **nasıl test edildi** yaz.
+4. En az **1 kişi** review etmeden merge yapılmaz.
+5. CI/CD kontrolleri (lint, test, build) geçmeden merge yapılmaz.
+6. Merge stratejisi: **Squash and merge** (temiz history).
+
+### PR Template
+```markdown
+## Ne değişti?
+- [Kısa açıklama]
+
+## Neden değişti?
+- [İş gerekçesi / bug referansı]
+
+## Nasıl test edildi?
+- [ ] Yerel ortamda test edildi
+- [ ] Birim testler yazıldı/güncellendi
+- [ ] Browser'da kontrol edildi
+- [ ] Dark mode kontrol edildi
+- [ ] Mobile responsive kontrol edildi
+```
+
+---
+
+## .gitignore Zorunlulukları
+
+```
+node_modules/
+dist/
+build/
+.env, .env.local, .env.*.local
+credentials.json, serviceAccountKey.json
+*.pem, *.key, *.cert
+.DS_Store
+*.log
+```

@@ -1,0 +1,116 @@
+---
+description: Test kuralları — birim test, entegrasyon test, coverage, test yazım standartları (Google 2026 Standards)
+globs: apps/**/*.test.ts,apps/**/*.test.tsx,apps/**/*.spec.ts
+alwaysApply: false
+---
+
+# 🧪 Test Kuralları
+
+**Versiyon:** 2.0.0 — Google 2026 Standards
+**Öncelik:** 🟡 P1 — Yüksek
+
+---
+
+## Genel İlkeler
+
+- Her bileşen ve hook için **en az 1 test dosyası**.
+- Test dosyası bileşenin yanında: `Login.tsx` → `Login.test.tsx`.
+- Test isimleri **ne test ettiğini** açıkça anlatır.
+- **Davranış testi** öncelikli; snapshot test minimum.
+
+---
+
+## Test Yapısı
+
+```tsx
+describe('Login', () => {
+  // Setup
+  beforeEach(() => {
+    render(<Login />)
+  })
+
+  // Render testleri
+  it('email ve şifre alanlarını render eder', () => {
+    expect(screen.getByLabelText('Email')).toBeInTheDocument()
+    expect(screen.getByLabelText('Şifre')).toBeInTheDocument()
+  })
+
+  // Validasyon testleri
+  it('boş form gönderildiğinde hata gösterir', async () => {
+    await userEvent.click(screen.getByRole('button', { name: 'Giriş Yap' }))
+    expect(screen.getByText('Email zorunludur')).toBeInTheDocument()
+  })
+
+  // Başarılı senaryo
+  it('başarılı girişte dashboard sayfasına yönlendirir', async () => {
+    await userEvent.type(screen.getByLabelText('Email'), 'test@test.com')
+    await userEvent.type(screen.getByLabelText('Şifre'), 'password123')
+    await userEvent.click(screen.getByRole('button', { name: 'Giriş Yap' }))
+    expect(mockNavigate).toHaveBeenCalledWith('/dashboard')
+  })
+
+  // Hata senaryosu
+  it('başarısız girişte hata mesajı gösterir', async () => {
+    server.use(rest.post('/api/auth/login', (_, res, ctx) => res(ctx.status(401))))
+    await userEvent.click(screen.getByRole('button', { name: 'Giriş Yap' }))
+    expect(screen.getByText('Giriş başarısız')).toBeInTheDocument()
+  })
+})
+```
+
+---
+
+## Neyi Test Et
+
+| Katman | Ne Test Edilir | Araç |
+|--------|---------------|------|
+| Bileşen | Render, kullanıcı etkileşimi, state değişimi | React Testing Library |
+| Hook | Dönüş değerleri, state güncellemeleri | `renderHook` |
+| API servis | İstek/yanıt, hata durumları | msw (Mock Service Worker) |
+| Form | Validasyon, submit, hata mesajları | `userEvent` + `screen` |
+| Router | Sayfa yönlendirmeleri | MemoryRouter |
+| Context | Provider değerleri, state paylaşımı | Custom wrapper |
+
+---
+
+## Test Kuralları
+
+1. **`data-testid`** kullan; CSS selector ile element seçme.
+2. **Mock:** API çağrılarını mock'la; gerçek backend'e istek **atma**.
+3. **Bağımsızlık:** Her test bağımsız; test sırası sonucu **etkilememeli**.
+4. **Snapshot minimum:** Snapshot yerine assertion kullan.
+5. **Aria query'leri tercih et:** `getByRole`, `getByLabelText` > `getByTestId`.
+6. **userEvent > fireEvent:** `userEvent` daha gerçekçi etkileşim simülasyonu sağlar.
+
+---
+
+## Coverage Hedefleri
+
+| Metrik | Minimum | Hedef |
+|--------|---------|-------|
+| Statement | %60 | %80 |
+| Branch | %50 | %70 |
+| Function | %60 | %80 |
+| Line | %60 | %80 |
+
+- **Kritik bileşenler** (auth, hasta) için %90+ coverage hedefle.
+- Coverage raporu CI/CD'de otomatik üretilir.
+
+---
+
+## Test Dosya Organizasyonu
+
+```
+src/
+├── components/
+│   ├── PatientCard.tsx
+│   └── PatientCard.test.tsx     ← Yanında
+├── hooks/
+│   ├── useAuth.ts
+│   └── useAuth.test.ts          ← Yanında
+├── services/
+│   ├── authService.ts
+│   └── authService.test.ts      ← Yanında
+└── __mocks__/
+    └── handlers.ts              ← MSW handler'ları
+```
