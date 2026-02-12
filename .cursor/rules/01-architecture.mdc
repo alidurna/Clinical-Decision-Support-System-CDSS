@@ -1,0 +1,118 @@
+---
+description: CDSS proje mimarisi, klasör yapısı, monorepo düzeni — tüm geliştirme bu yapıya uymalı (Google 2026 Standards)
+alwaysApply: true
+---
+
+# 🏗️ Proje Mimarisi — CDSS
+
+**Versiyon:** 2.0.0 — Google 2026 Standards
+**Öncelik:** 🔴 P0 — Kritik
+
+---
+
+## Monorepo Yapısı
+
+```
+Clinical-Decision-Support-System-CDSS/
+├── apps/                        → Micro Frontend (pnpm workspace)
+│   ├── shell/                   → Host uygulama, routing, tema, layout (port 5173)
+│   ├── auth/                    → Kimlik doğrulama sayfaları (port 5174)
+│   └── dashboard/               → Dashboard sayfaları (port 5175)
+├── backend/                     → Java Spring Boot Mikro Servisler
+│   ├── api-gateway/             → Tek giriş noktası (port 8080)
+│   ├── auth-service/            → Kimlik doğrulama API (port 8081)
+│   ├── patient-service/         → Hasta yönetimi (port 8082)
+│   ├── doctor-service/          → Doktor yönetimi (port 8083)
+│   └── notification-service/    → Bildirimler (port 8084)
+├── ai-service/                  → Python AI/ML servisi (port 5000)
+├── docker/                      → Docker konfigürasyonları
+├── docs/                        → Proje dokümanları
+├── .cursor/rules/               → Cursor IDE kuralları
+├── docker-compose.yml           → Tüm servislerin orchestration
+├── pnpm-workspace.yaml          → Monorepo workspace tanımı
+└── package.json                 → Root paket yönetimi
+```
+
+## Temel Mimari Prensipler
+
+### 1. Sorumluluk Ayrımı (Separation of Concerns)
+- Her micro frontend ve mikro servis **tek bir domain**'den sorumlu.
+- Frontend ↔ Backend arasında **API Gateway** üzerinden iletişim.
+- Servisler arası doğrudan bağlantı yasak; event-driven iletişim kullanılır.
+
+### 2. Merkezi Tema ve Paylaşılan Bağımlılıklar
+- Renk, tipografi, spacing **shell**'de tanımlanır; diğer app'ler bu temayı kullanır.
+- React, ReactDOM, MUI, react-router-dom **workspace genelinde singleton**; versiyon tutarsızlığı yasak.
+
+### 3. Module Federation (Micro Frontend)
+- Shell host uygulamadır; Auth ve Dashboard remote'tur.
+- Remote bileşenler `React.lazy` + `Suspense` + `ErrorBoundary` ile yüklenir.
+- Ortak bileşenler (navbar, footer) → `apps/shell/src/components/`; remote'lar shell host üzerinden yüklenir.
+
+### 4. Port Haritası (DEĞİŞMEZ)
+
+| Servis | Port | Açıklama |
+|--------|------|----------|
+| Shell (Frontend Host) | 5173 | Ana uygulama |
+| Auth (Frontend Remote) | 5174 | Kimlik doğrulama |
+| Dashboard (Frontend Remote) | 5175 | Dashboard |
+| API Gateway | 8080 | Backend tek giriş |
+| Auth Service | 8081 | Kimlik API |
+| Patient Service | 8082 | Hasta API |
+| Doctor Service | 8083 | Doktor API |
+| Notification Service | 8084 | Bildirim API |
+| AI Service | 5000 | AI/ML API |
+
+Yeni app/servis eklenirse sıradaki port kullanılır.
+
+## Branch–App Eşlemesi
+
+| Branch | Uygulama / Dosya |
+|--------|-------------------|
+| `feature/intro` | `apps/shell` — Home (tanıtım) sayfası |
+| `feature/login` | `apps/auth` — Login bileşeni |
+| `feature/register` | `apps/auth` — Register bileşeni |
+| `feature/dashboard` | `apps/dashboard` — Dashboard bileşeni |
+
+Detay: `CONTRIBUTING.md`.
+
+## Yeni Özellik Ekleme Kuralları
+
+1. **Yeni sayfa** → İlgili micro frontend'e ekle:
+   - Auth sayfaları → `apps/auth/`
+   - Dashboard sayfaları → `apps/dashboard/`
+   - Genel sayfalar → `apps/shell/`
+
+2. **Yeni micro frontend** → `apps/<isim>/` altında oluştur, `pnpm-workspace.yaml` otomatik algılar.
+
+3. **Ortak bileşen** → `apps/shell/src/components/`; Module Federation ile paylaşılır.
+
+4. **Backend endpoint** → İlgili mikro serviste; API Gateway (8080) üzerinden route.
+
+5. **Yeni mikro servis** → `backend/<isim>-service/` altında; docker-compose'a ekle.
+
+## Teknoloji Stack
+
+| Katman | Teknoloji |
+|--------|-----------|
+| Frontend | React 18, TypeScript, Vite, MUI, Module Federation |
+| Paket Yöneticisi | pnpm (workspace) |
+| Backend | Java 17+, Spring Boot, Spring Cloud Gateway |
+| Veritabanı | PostgreSQL (servis başına ayrı DB) |
+| AI/ML | Python, Flask/FastAPI |
+| Container | Docker, Docker Compose |
+| Monitoring | Prometheus, Grafana (planlanan) |
+
+## Çalıştırma
+
+```bash
+# Tüm frontend'ler
+pnpm install
+pnpm dev
+
+# Tek bir app
+cd apps/shell && pnpm dev
+
+# Backend (her servis ayrı)
+cd backend/api-gateway && ./mvnw spring-boot:run
+```

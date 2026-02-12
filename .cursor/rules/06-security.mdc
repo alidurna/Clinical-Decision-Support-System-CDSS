@@ -1,0 +1,123 @@
+---
+description: Güvenlik kuralları — kimlik doğrulama, yetkilendirme, veri koruma, XSS/CSRF (Google 2026 Standards)
+alwaysApply: true
+---
+
+# 🔒 Güvenlik Kuralları
+
+**Versiyon:** 2.0.0 — Google 2026 Standards
+**Öncelik:** 🔴 P0 — Kritik
+**Kapsam:** Tüm frontend ve backend kodu
+
+---
+
+## Kimlik Doğrulama (Authentication)
+
+### JWT Token Yönetimi
+- JWT token kullanılır; token **`httpOnly cookie`** ile saklanır (tercih edilen).
+- Alternatif: `localStorage` (SADECE geliştirme ortamında).
+- Token her API isteğinde `Authorization: Bearer <token>` header'ında gönderilir.
+- Token süresi dolduğunda kullanıcı login sayfasına yönlendirilir.
+- **Refresh token** mekanizması ile sessiz yenileme yapılır.
+
+### Token Güvenlik Kuralları
+- ❌ Token'ı URL query param olarak gönderme
+- ❌ Token'ı `console.log` ile yazdırma
+- ❌ Token'ı state management'a (Redux/Context) koyma
+- ✅ Token'ı `httpOnly` cookie veya `localStorage` ile sakla
+- ✅ Token süresini kontrol et (expiry check)
+
+---
+
+## Yetkilendirme (Authorization)
+
+### Rol Tabanlı Erişim Kontrolü (RBAC)
+- **Roller:** `ADMIN`, `DOCTOR`, `PATIENT`
+- Her endpoint **rol bazlı** korunur.
+- Rol kontrolü **hem frontend hem backend**'de yapılır.
+- Frontend tek başına **yeterli değil**; backend validasyonu zorunlu.
+
+```tsx
+// PrivateRoute — Rol tabanlı route koruması
+const PrivateRoute = ({ children, roles }: { children: ReactNode; roles?: string[] }) => {
+  const { user, isAuthenticated } = useAuth()
+  
+  if (!isAuthenticated) return <Navigate to="/login" />
+  if (roles && !roles.includes(user?.role)) return <Navigate to="/unauthorized" />
+  
+  return <>{children}</>
+}
+
+// Kullanım
+<PrivateRoute roles={['ADMIN', 'DOCTOR']}>
+  <PatientDetails />
+</PrivateRoute>
+```
+
+---
+
+## Veri Koruma
+
+### Zorunlu Kurallar
+1. **Şifre:** Frontend'de düz metin gösterme; `type="password"` **zorunlu**. Backend'de **bcrypt hash**.
+2. **Kişisel veri:** Hasta bilgileri (TC, telefon, adres) **loglanmaz**, `console.log`'a **yazılmaz**.
+3. **Environment:** API key, secret, şifre `.env` dosyasında; `.env` git'e **eklenmez** (`.gitignore`'da).
+4. **HIPAA Uyumu:** Hasta sağlık verileri şifreli iletim (HTTPS) ve şifreli saklama.
+
+### XSS Koruması
+- ❌ Kullanıcı girdisini doğrudan `dangerouslySetInnerHTML` ile render etme.
+- ✅ HTML sanitization kütüphanesi kullan (DOMPurify).
+- ✅ Input validasyonu hem frontend hem backend'de.
+
+### CSRF Koruması
+- ✅ API Gateway'de CSRF token zorunlu (form POST istekleri için).
+- ✅ `SameSite` cookie attribute kullan.
+
+### CORS Kuralları
+- ✅ Backend'de **sadece izin verilen origin'ler** tanımlanır.
+- ❌ `Access-Control-Allow-Origin: *` yasak (üretimde).
+
+---
+
+## Form Güvenliği
+
+- Giriş/kayıt formlarında `required` ve tip doğrulama:
+  - Email: formatı geçerli olmalı
+  - Şifre: minimum **8 karakter**, en az 1 büyük + 1 küçük harf + 1 rakam
+- **Rate limiting:** Backend'de brute-force koruması (5 başarısız deneme → 15dk bekleme).
+- **CAPTCHA:** Art arda başarısız denemelerde CAPTCHA göster.
+
+---
+
+## Hassas Dosyalar (Git'e EKLENMEZ)
+
+```
+.env, .env.local, .env.*.local
+credentials.json, serviceAccountKey.json
+*.pem, *.key, *.cert
+application-*.yml (hassas config)
+```
+
+---
+
+## HTTPS ve İletişim Güvenliği
+
+- Tüm API iletişimi **HTTPS** üzerinden.
+- Geliştirme ortamında HTTP kabul edilir, üretimde **HTTPS zorunlu**.
+- Content-Security-Policy (CSP) header'ı ekle.
+- Strict-Transport-Security (HSTS) header'ı ekle.
+
+---
+
+## ❌ Güvenlik Yasak Listesi
+
+1. ❌ Hardcoded API key / secret
+2. ❌ Token'ı URL'de gönderme
+3. ❌ `console.log` ile hasta verisi yazdırma
+4. ❌ `dangerouslySetInnerHTML` ile kullanıcı girdisi render
+5. ❌ `eval()` kullanımı
+6. ❌ CORS wildcard (`*`) üretimde
+7. ❌ HTTP üzerinden hassas veri iletimi (üretimde)
+8. ❌ Şifreyi düz metin saklama
+9. ❌ `.env` dosyasını git'e commit etme
+10. ❌ Inline script (CSP ihlali)

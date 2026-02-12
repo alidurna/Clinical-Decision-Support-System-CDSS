@@ -1,0 +1,80 @@
+---
+description: Kural dizini — CDSS projesinin tüm kurallarının merkezi haritası (Google 2026 Standards)
+alwaysApply: true
+---
+
+# 📋 CDSS Proje Kuralları — Merkezi İndeks
+
+**Proje:** Clinical Decision Support System (CDSS)
+**Versiyon:** 2.0.0 — Google 2026 Standards
+**Tarih:** 2026-02-12
+**Durum:** ✅ Aktif & Uygulanıyor
+
+---
+
+## 📁 Dosya Yapısı
+
+```
+.cursor/rules/
+├── 00-index.mdc                  → Bu dosya (merkezi harita)
+├── 01-architecture.mdc           → Proje mimarisi, klasör yapısı
+├── 02-git-workflow.mdc           → Branch stratejisi, commit formatı
+├── 06-security.mdc               → Güvenlik (frontend + backend ortak)
+├── 10-naming-conventions.mdc     → İsimlendirme kuralları (ortak)
+├── frontend/                     → 🎨 Frontend kuralları
+│   ├── frontend.mdc              → Frontend birleşik özet
+│   ├── 03-react-typescript.mdc   → React/TS standartları
+│   ├── 04-design-system.mdc      → Design System, glassmorphism, hover yasağı
+│   ├── 05-api-integration.mdc    → API entegrasyonu
+│   ├── 07-testing.mdc            → Test kuralları
+│   ├── 08-accessibility.mdc      → Erişilebilirlik (a11y)
+│   └── 09-error-handling.mdc     → Hata yönetimi
+└── backend/                      → 🔧 Backend kuralları
+    └── 12-backend.mdc            → Spring Boot, API Gateway, DB
+```
+
+---
+
+## ⚠️ KRİTİK KURALLAR (HER ZAMAN OKU)
+
+| # | Dosya | Öncelik | Açıklama |
+|---|-------|---------|----------|
+| 00 | `00-index.mdc` | 🔴 P0 | Bu dosya — merkezi harita |
+| 01 | `01-architecture.mdc` | 🔴 P0 | Proje mimarisi, monorepo, port haritası |
+| 02 | `02-git-workflow.mdc` | 🔴 P0 | Branch stratejisi, commit formatı, PR |
+| 06 | `06-security.mdc` | 🔴 P0 | Auth, yetkilendirme, veri koruma |
+| 10 | `10-naming-conventions.mdc` | 🔴 P0 | Dosya, değişken, fonksiyon isimlendirme |
+
+---
+
+## 🎨 FRONTEND KURALLARI (`frontend/`)
+
+| # | Dosya | Kapsam | Açıklama |
+|---|-------|--------|----------|
+| — | `frontend/frontend.mdc` | `apps/**/*` | Frontend birleşik özet (tek dosya) |
+| 03 | `frontend/03-react-typescript.mdc` | `apps/**/*.tsx,ts` | React/TS standartları, hook, performans |
+| 04 | `frontend/04-design-system.mdc` | `apps/**/*.tsx,css` | Renk, tipografi, spacing, glassmorphism, hover yasağı, boyutlar |
+| 05 | `frontend/05-api-integration.mdc` | `apps/**/*.tsx,ts` | API çağrı, hata yönetimi, loading, caching |
+| 07 | `frontend/07-testing.mdc` | `*.test.tsx,ts` | Test yapısı, coverage, araçlar |
+| 08 | `frontend/08-accessibility.mdc` | `apps/**/*.tsx` | WCAG 2.1 AA, klavye, ARIA |
+| 09 | `frontend/09-error-handling.mdc` | `apps/**/*.tsx,ts` | Error Boundary, loglama, fallback |
+
+---
+
+## 🔧 BACKEND KURALLARI (`backend/`)
+
+| # | Dosya | Kapsam | Açıklama |
+|---|-------|--------|----------|
+| 12 | `backend/12-backend.mdc` | `backend/**/*` | Spring Boot, API Gateway, DB, güvenlik |
+
+---
+
+## 🚀 Yeni Geliştirici Başlangıç Sırası
+
+1. ✅ Bu dosyayı oku (`00-index.mdc`)
+2. ✅ `01-architecture.mdc` — Proje yapısını anla
+3. ✅ `02-git-workflow.mdc` — Branch ve commit kurallarını öğren
+4. ✅ `frontend/03-react-typescript.mdc` — Kodlama standartlarını uygula
+5. ✅ `frontend/04-design-system.mdc` — Tasarım sistemini takip et
+6. ✅ `06-security.mdc` — Güvenlik kurallarını öğren
+7. ✅ `10-naming-conventions.mdc` — İsimlendirme standartlarını uygula

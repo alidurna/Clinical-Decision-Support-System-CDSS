@@ -1,0 +1,196 @@
+---
+description: Backend kuralları — Java Spring Boot, API Gateway, mikro servis standartları (Google 2026 Standards)
+globs: backend/**/*
+alwaysApply: false
+---
+
+# 🔧 Backend Kuralları
+
+**Versiyon:** 2.0.0 — Google 2026 Standards
+**Öncelik:** 🔴 P0 — Kritik
+**Kapsam:** `backend/` (API Gateway + Mikro Servisler)
+
+---
+
+## Kapsam ve Teknoloji
+
+- **API Gateway:** `backend/api-gateway` — port 8080, tek giriş noktası.
+- **Mikro servisler:** auth-service (8081), patient-service (8082), doctor-service (8083), notification-service (8084).
+- **Teknoloji:** Java 17+, Spring Boot, Spring Cloud Gateway.
+- **Veritabanı:** PostgreSQL (servis başına ayrı DB).
+
+---
+
+## Route Yapısı (API Gateway)
+
+| Path | Servis | Port | Açıklama |
+|------|--------|------|----------|
+| `/api/auth/**` | auth-service | 8081 | Kimlik doğrulama |
+| `/api/patients/**` | patient-service | 8082 | Hasta yönetimi |
+| `/api/doctors/**` | doctor-service | 8083 | Doktor yönetimi |
+| `/api/notifications/**` | notification-service | 8084 | Bildirimler |
+| `/api/ai/**` | ai-service | 5000 | AI/ML servisi |
+
+Yeni route eklerken `api-gateway` `application.yml`'e route ekle; path **kebab-case**, **çoğul** isim.
+
+---
+
+## Paket ve Sınıf Yapısı
+
+### Paket Yapısı
+```java
+com.cdss.<servis>/
+├── config/           → Konfigürasyon sınıfları
+├── controller/       → REST Controller
+├── service/          → İş mantığı
+├── repository/       → Veritabanı erişimi
+├── model/            → Entity sınıfları
+├── dto/
+│   ├── request/      → İstek DTO'ları
+│   └── response/     → Yanıt DTO'ları
+├── exception/        → Özel exception'lar
+├── security/         → Security config, filter
+└── util/             → Yardımcı sınıflar
+```
+
+### İsimlendirme
+- **Base package:** `com.cdss.<servis-adı>` (örn. `com.cdss.auth`)
+- **Application sınıfı:** `*Application.java` (örn. `AuthServiceApplication.java`)
+- **Katmanlar:** controller → service → repository
+- **Controller:** `*Controller`, **Service:** `*Service`, **Repository:** `*Repository`
+- **DTO:** `*Request`, `*Response`
+- Metodlar **camelCase**.
+
+---
+
+## API Tasarımı
+
+### RESTful Kuralları
+| Metod | Kullanım | Örnek |
+|-------|----------|-------|
+| GET | Listele / Detay | `GET /api/patients`, `GET /api/patients/{id}` |
+| POST | Oluştur | `POST /api/patients` |
+| PUT | Tamamını güncelle | `PUT /api/patients/{id}` |
+| PATCH | Kısmen güncelle | `PATCH /api/patients/{id}` |
+| DELETE | Sil | `DELETE /api/patients/{id}` |
+
+### Yanıt Formatı (Tutarlı Wrapper)
+```json
+{
+  "data": { ... },
+  "message": "İşlem başarılı",
+  "success": true,
+  "timestamp": "2026-02-12T15:30:00Z"
+}
+```
+
+### HTTP Durum Kodları
+| Kod | Durum | Kullanım |
+|-----|-------|----------|
+| 200 | OK | Başarılı GET / PUT |
+| 201 | Created | Başarılı POST |
+| 204 | No Content | Başarılı DELETE |
+| 400 | Bad Request | Validasyon hatası |
+| 401 | Unauthorized | Kimlik doğrulama hatası |
+| 403 | Forbidden | Yetkilendirme hatası |
+| 404 | Not Found | Kaynak bulunamadı |
+| 409 | Conflict | Çakışma (duplicate vb.) |
+| 500 | Internal Server Error | Sunucu hatası |
+
+---
+
+## Güvenlik
+
+### Kimlik Doğrulama
+- **JWT** token; auth-service token üretir/doğrular.
+- Gateway veya filter ile token kontrolü.
+- Token süresi: erişim → 15dk, yenileme → 7 gün.
+
+### Yetkilendirme
+- Roller: `ADMIN`, `DOCTOR`, `PATIENT`.
+- Endpoint seviyesinde `@PreAuthorize` veya `@Secured`.
+
+### Veri Güvenliği
+- Şifre: **BCrypt hash**; düz metin saklanmaz.
+- Hassas alanlar **loglanmaz** (TC, telefon, şifre).
+- **Input validasyonu:** Bean Validation (`@Valid`, `@NotBlank`, `@Email`).
+- **CORS:** Sadece izin verilen frontend origin.
+
+---
+
+## Veritabanı
+
+### Kurallar
+- Her servis **kendi veritabanı** (database per service): `cdss_auth`, `cdss_patient`, `cdss_doctor`.
+- **JPA/Hibernate**; entity'ler sadece ilgili serviste.
+- **Migration:** Flyway veya Liquibase ile şema yönetimi.
+- Bağlantı bilgisi **environment variable** (`DATABASE_URL`, `USERNAME`, `PASSWORD`).
+- `application.yml`'de placeholder kullan, hardcode etme.
+
+### Best Practices
+- Index oluştur (sık sorgulanan alanlar).
+- N+1 query probleminden kaçın (JOIN FETCH veya EntityGraph).
+- Soft delete tercih et (`isDeleted` flag).
+- Audit: `createdAt`, `updatedAt`, `createdBy` alanları.
+
+---
+
+## Loglama ve Hata Yönetimi
+
+### Loglama
+- **SLF4J + Logback**; seviye: INFO (prod), DEBUG (geliştirme).
+- Kişisel veri **loglanmaz**.
+- Request/Response logları: correlation ID ile.
+
+### Exception Handling
+```java
+@ControllerAdvice
+public class GlobalExceptionHandler {
+    
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiResponse> handleNotFound(ResourceNotFoundException ex) {
+        return ResponseEntity.status(404).body(ApiResponse.error(ex.getMessage()));
+    }
+    
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse> handleGeneral(Exception ex) {
+        log.error("Unexpected error", ex);
+        return ResponseEntity.status(500).body(ApiResponse.error("Sistem hatası"));
+    }
+}
+```
+
+- Tutarlı hata yanıtı (`@ControllerAdvice`).
+- Stack trace **sadece geliştirme** ortamında.
+- Her özel hata durumu için **özel exception** sınıfı.
+
+---
+
+## Servis İletişimi
+
+| Pattern | Kullanım |
+|---------|----------|
+| REST (senkron) | Anlık yanıt gerektiren istekler |
+| Event-driven (asenkron) | Bildirimler, email gönderimi |
+| API Gateway | Tüm dış trafik buradan geçer |
+
+---
+
+## Docker ve Deployment
+
+```dockerfile
+# Multi-stage build
+FROM maven:3.9-eclipse-temurin-17 AS build
+WORKDIR /app
+COPY . .
+RUN mvn clean package -DskipTests
+
+FROM eclipse-temurin:17-jre-alpine
+COPY --from=build /app/target/*.jar app.jar
+EXPOSE 8081
+ENTRYPOINT ["java", "-jar", "app.jar"]
+```
+
+- Her servis ayrı **Docker container**.
+- `docker-compose.yml` ile lokal orchestration.
+- Health check endpoint: `/actuator/health`.

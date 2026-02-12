@@ -1,0 +1,77 @@
+---
+description: Frontend kuralları — apps/ için tüm kurallar tek dosyada birleşik özet (Modern Clinical UX)
+globs: apps/**/*
+alwaysApply: false
+---
+
+# 🎯 Frontend Kuralları (Birleşik Özet)
+
+**Versiyon:** 3.0.0 — Modern Clinical UX (2026 Standards)
+**Kapsam:** `apps/shell`, `apps/auth`, `apps/dashboard`
+**Stack:** React 18, TypeScript, Vite, MUI/Tailwind, Fremar Motion, pnpm
+
+---
+
+## 🎨 Design System (YENİ: Hover Aktif ✅)
+
+- **Hover:** Tıklanabilir öğelerde (buton, tablo, kart) görsel geri bildirim **ZORUNLU**. `hover:bg-slate-50`, `hover:border-blue-200` gibi hafif efektler kullan.
+- **Tasarım Dili:** "Clean Clinical UI" (Temiz, Ferah, Güvenilir). Eğik/kırık çizgiler yerine; yumuşak radius (`rounded-2xl`), ince kenarlıklar.
+- **Renk:** `primary.main` (#0284c7 Sky Blue), `text.primary` (#0f172a Slate Dark). Arkaplan `bg-slate-50`.
+- **Layout:** Bento Grid yapısı (modüler kutular, `gap-6` spacing).
+- **Animasyon:** `framer-motion` ile anlamlı geçişler (`layout`, `AnimatePresence`).
+
+---
+
+## 1. React & TypeScript
+
+- **Fonksiyonel bileşen** (FC) kullan; arrow function.
+- `any` YASAK. Interface tanımla. Event handler tiplerini doğru kullan.
+- **State:** `useState` (basit), `useReducer` (complex). Context (global).
+- **Hook:** `use` prefixi şart. Custom hook'lar logic'i ayırmak için.
+- **Import:** React → Libs → Internal → Types → CSS.
+
+---
+
+## 3. API Entegrasyonu
+
+- **Axios** instance kullan (`src/api/client.ts`).
+- Base URL: `VITE_API_URL`.
+- RESTful standartlar (`GET /patients`, `POST /auth/login`).
+- **Loading:** Her istekte loading state (Skeleton veya Spinner).
+- **Hata:** `try/catch` blokları ile kullanıcı dostu mesajlar.
+- **AbortController:** İptal edilebilir istekler.
+
+---
+
+## 4. Erişilebilirlik (a11y)
+
+- **Klavye:** Tab ile her yere ulaşılabilmeli. `focus-visible` outline şart.
+- **Renk:** Kontrast oranı (4.5:1) korunmalı.
+- **Semantik:** `h1`-`h6` hiyerarşisi, `button` vs `div` ayrımı.
+- **Form:** `label` veya `aria-label` zorunlu.
+
+---
+
+## 5. Hata Yönetimi
+
+- Teknik detay gösterme ("Sunucu hatası" de, stack trace basma).
+- **Error Boundary:** Her app ve kritik bileşen (tablo, grafik) için sınır.
+- **Log:** Sentry/console.error (dev). Kişisel sağlık verisini loglama ❌.
+
+---
+
+## 7. İsimlendirme
+
+- **Dosya:** PascalCase (`PatientCard.tsx`).
+- **Hook:** `usePatient.ts`.
+- **Fonksiyon:** `fetchPatient`, `handleClick`.
+- **Klasör:** `components`, `pages` (kebab-case).
+
+---
+
+## 8. Güvenlik
+
+- **Token:** `httpOnly` cookie veya `localStorage` (dev).
+- **XSS:** `dangerouslySetInnerHTML` yasak.
+- **Veri:** Hasta TC/Adres loglanmaz.
+- **Route:** `PrivateRoute` ile rol kontrolü (Admin/Doctor).

@@ -1,0 +1,135 @@
+---
+description: CDSS Design System — Modern Clinical UX, Bento Grid, Renk Paleti, Tipografi ve Mikro Etkileşimler (Google 2026 Standards)
+globs: apps/**/*.tsx,apps/**/*.css
+alwaysApply: false
+---
+
+# 🎨 Design System (Modern Clinical UX)
+
+**Versiyon:** 3.0.0 — Google 2026 Standards
+**Öncelik:** 🔴 P0 — Kritik
+**Vizyon:** Temiz, Güvenilir, Profesyonel ve İnteraktif
+
+---
+
+## 🏗️ Tasarım Felsefesi: "Clinical Clarity"
+
+CDSS bir sağlık yazılımıdır; tasarım **karar vermeyi hızlandırmalı**, göz yormamalı ve güven vermelidir.
+
+1.  **Temiz ve Ferah (Breathable):** Beyaz boşluk (whitespace) kullanımı ile bilgi yoğunluğunu yönet.
+2.  **Bento Grid Düzeni:** Dashboard ve bilgi ekranlarında modüler, kutu bazlı (bento) yerleşimler.
+3.  **Anlamlı Derinlik:** Aşırı "Glassmorphism" yerine; hafif gölgeler (elevation), ince kenarlıklar (borders) ve katmanlı yapı.
+4.  **İnteraktif İpuçları:** Kullanıcı etkileşimi (Hover, Focus, Active) **teşvik edilir**.
+
+---
+
+## 🖱️ Etkileşim ve Animasyon (Hover Artık SERBEST ✅)
+
+Eski "Hover Yasağı" kaldırılmıştır. Modern UX için görsel geri bildirim şarttır.
+
+### Mikro Etkileşim Kuralları
+- **Hover:** Tıklanabilir öğeler (buton, kart, tablo satırı) hover durumunda **hafif** değişim göstermeli (bg rengi, border, veya hafif yukarı kalkma).
+- **Scale:** Butonlara tıklandığında (active) çok hafif küçülme (`scale: 0.98`) hissi ver.
+- **Focus:** Klavye navigasyonu için `focus-visible` outline **zorunludur**.
+
+```tsx
+// ✅ MODERN EXAMPLE - Interaktif Kart
+<motion.div
+  whileHover={{ y: -2, boxShadow: "0 10px 30px rgba(0,0,0,0.05)" }}
+  whileTap={{ scale: 0.98 }}
+  className="bg-white border border-gray-100 rounded-2xl p-5 cursor-pointer transition-colors hover:border-blue-200"
+>
+  <h3 className="font-semibold text-gray-900">Hasta Profili</h3>
+</motion.div>
+```
+
+---
+
+## 🎨 Renk Paleti (Medical Blue & Clean Slate)
+
+Göz yormayan, yüksek kontrastlı ve erişilebilir bir palet.
+
+| Token | Değer | Kullanım |
+|-------|-------|----------|
+| `primary.main` | `#0284c7` (Sky-600) | Ana aksiyonlar, marka rengi |
+| `primary.light` | `#e0f2fe` (Sky-100) | Arkaplan vurguları (hover, active) |
+| `secondary.main` | `#64748b` (Slate-500) | İkincil ikonlar, nötr aksiyonlar |
+| `background.default` | `#f8fafc` (Slate-50) | Sayfa arkaplanı (hafif gri) |
+| `background.paper` | `#ffffff` (White) | Kartlar, paneller (saf beyaz) |
+| `text.primary` | `#0f172a` (Slate-900) | Başlıklar, ana metin |
+| `text.secondary` | `#64748b` (Slate-500) | Açıklamalar |
+| `error.main` | `#ef4444` (Red-500) | Kritik uyarılar |
+| `success.main` | `#10b981` (Emerald-500) | Başarılı işlem |
+| `border.light` | `#e2e8f0` (Slate-200) | İnce ayırıcılar |
+
+---
+
+## 🔠 Tipografi (Inter / System Font)
+
+Okunabilirlik ön planda.
+
+| Seviye | Stil | Kullanım |
+|--------|------|----------|
+| **Display** | `text-2xl font-bold tracking-tight text-slate-900` | Sayfa başlıkları |
+| **Heading** | `text-lg font-semibold text-slate-800` | Kart başlıkları |
+| **Subtitle** | `text-sm font-medium text-slate-500` | Alt başlıklar |
+| **Body** | `text-sm font-normal text-slate-600 leading-relaxed` | İçerik |
+| **Caption** | `text-xs font-medium text-slate-400` | Tarih, etiket |
+
+*Not: Sağlık verisi yoğun olduğu için standart metin boyutu `text-sm` (14px) olarak optimize edilmiştir.*
+
+---
+
+## 📐 Spacing ve Radius (Modern Standartlar)
+
+### Border Radius
+- **Kartlar / Container:** `rounded-2xl` (16px) — Modern ve yumuşak his.
+- **Butonlar / Inputlar:** `rounded-xl` (12px).
+- **İç Elementler:** `rounded-lg` (8px).
+
+### Spacing (8px Grid)
+- `gap-4` (16px) ve `gap-6` (24px) standart boşluklar.
+- Dashboard grid'leri için `gap-6` kullanın.
+
+---
+
+## 🧩 Bileşen Kuralları
+
+### 1. Kartlar (Bento Style)
+- Arkaplan: Beyaz (`bg-white`).
+- Kenarlık: İnce ve zarif (`border border-slate-100`).
+- Gölge: Çok hafif, dağınık (`shadow-sm` veya custom soft shadow).
+- **Hover:** Hover'da border rengi belirginleşir veya hafif gölge artar.
+
+### 2. Tablolar (Veri Yoğunluğu)
+- **Zebra striping yerine:** Sadece satır alt çizgi (`border-b border-slate-100`).
+- **Hover:** Satır üzerine gelince `bg-slate-50`.
+- **Header:** Sticky header, hafif gri arkaplan.
+
+### 3. Butonlar
+- **Primary:** `bg-sky-600 text-white hover:bg-sky-700 shadow-sm hover:shadow active:scale-95`.
+- **Secondary:** `bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300`.
+- **Ghost:** `text-slate-600 hover:bg-slate-100` (tablo içi aksiyonlar için).
+
+---
+
+## 📏 Layout (Dashboard)
+
+```tsx
+// Örnek Dashboard Layout (Modern Bento Grid)
+<div className="grid grid-cols-12 gap-6 p-6 bg-slate-50 min-h-screen">
+  
+  {/* Sol Panel - Özet */}
+  <div className="col-span-12 md:col-span-4 lg:col-span-3 space-y-6">
+    <StatsCard label="Bekleyen Hasta" value="12" trend="+2" />
+    <QuickActions />
+  </div>
+
+  {/* Ana İçerik - Tablo/Grafik */}
+  <div className="col-span-12 md:col-span-8 lg:col-span-9 bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
+    <Header title="Hasta Listesi" subtitle="Bugünkü randevular" />
+    <PatientTable />
+  </div>
+
+</div>
+```

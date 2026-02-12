@@ -1,0 +1,203 @@
+---
+description: React ve TypeScript kodlama standartları — bileşen yapısı, hook kuralları, performans (Google 2026 Standards)
+globs: apps/**/*.tsx,apps/**/*.ts
+alwaysApply: false
+---
+
+# ⚛️ React & TypeScript Standartları
+
+**Versiyon:** 2.0.0 — Google 2026 Standards
+**Öncelik:** 🔴 P0 — Kritik
+**Kapsam:** Tüm `apps/` altındaki `.tsx` ve `.ts` dosyaları
+
+---
+
+## Bileşen Yapısı
+
+### Temel Kurallar
+- **Fonksiyonel bileşen** kullan; class component **yasak**.
+- Dosya adı = Bileşen adı, **PascalCase**: `Login.tsx` → `export default Login`.
+- Bir dosyada **tek ana bileşen**; küçük yardımcı bileşenler aynı dosyada olabilir.
+- Arrow function syntax tercih et.
+
+```tsx
+// ✅ DOĞRU
+const Login = () => { ... }
+export default Login
+
+// ❌ YANLIŞ — isimsiz export
+export default function() { ... }
+
+// ❌ YANLIŞ — class component
+class Login extends React.Component { ... }
+```
+
+### Bileşen Dosya Yapısı (Sıralama)
+```tsx
+// 1. Import'lar (sıralı)
+import React, { useState, useEffect } from 'react'
+
+// 2. Interface / Type tanımları
+interface LoginProps {
+  onSubmit: (email: string, password: string) => void
+}
+
+// 3. Sabitler (component dışı)
+const MAX_ATTEMPTS = 5
+
+// 4. Bileşen tanımı
+const Login: React.FC<LoginProps> = ({ onSubmit }) => {
+  // 4a. State
+  const [email, setEmail] = useState('')
+  
+  // 4b. Custom Hook'lar
+  const { user } = useAuth()
+  
+  // 4c. Derived values / useMemo
+  const isValid = useMemo(() => email.includes('@'), [email])
+  
+  // 4d. Callbacks / useCallback
+  const handleSubmit = useCallback(() => { ... }, [])
+  
+  // 4e. useEffect
+  useEffect(() => { ... }, [])
+  
+  // 4f. Handler fonksiyonları
+  const handleClick = () => { ... }
+  
+  // 4g. Early return (loading, error, empty)
+  if (loading) return <Skeleton />
+  
+  // 4h. JSX return
+  return ( ... )
+}
+
+export default Login
+```
+
+---
+
+## TypeScript Kuralları
+
+### Tip Güvenliği
+- `any` kullanma; bilinmeyen tip için `unknown`, sonra **type guard** ile daralt.
+- Props için **`interface`** tanımla; inline `{}` tip kullanma.
+- Event handler'lar için doğru tipleri kullan:
+  - `React.FormEvent<HTMLFormElement>`
+  - `React.ChangeEvent<HTMLInputElement>`
+  - `React.MouseEvent<HTMLButtonElement>`
+
+```tsx
+// ✅ DOĞRU
+interface LoginFormProps {
+  onSubmit: (email: string, password: string) => void
+  initialEmail?: string  // opsiyonel prop
+}
+
+// ❌ YANLIŞ
+const Login = (props: any) => { ... }
+```
+
+### Enum ve Union Type
+- Basit durumlar için **union type** tercih et: `type Status = 'idle' | 'loading' | 'error'`
+- Karmaşık durumlar için `enum` kullan.
+- Discriminated union ile state management:
+
+```tsx
+type RequestState =
+  | { status: 'idle' }
+  | { status: 'loading' }
+  | { status: 'success'; data: Patient[] }
+  | { status: 'error'; error: string }
+```
+
+---
+
+## Hook Kuralları
+
+### State Yönetimi
+- **`useState`** → Basit, bağımsız değerler.
+- **`useReducer`** → Karmaşık, birbiriyle ilişkili state.
+- **Context** → Sadece tema/auth gibi **global** state için; her küçük state için context açma.
+
+### Side Effect
+- **`useEffect`** → Bağımlılık dizisini **eksiksiz** yaz.
+- Boş dizi `[]` sadece mount'ta çalışacak effect'ler için.
+- Cleanup fonksiyonu unutma (subscription, timer, event listener).
+
+```tsx
+useEffect(() => {
+  const controller = new AbortController()
+  fetchData({ signal: controller.signal })
+  return () => controller.abort() // ✅ Cleanup
+}, [dependency])
+```
+
+### Custom Hook
+- `use` prefixi **zorunlu**: `useAuth`, `usePatients`, `useDebounce`.
+- Tekrar eden mantığı custom hook'a çıkar.
+- Hook'tan dönen değerler tipi açık olmalı.
+
+---
+
+## Import Sırası (Zorunlu)
+
+```tsx
+// 1. React / React kütüphaneleri
+import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+
+// 2. Üçüncü parti kütüphaneler
+import { Box, Typography, Button } from '@mui/material'
+import axios from 'axios'
+
+// 3. Proje içi bileşenler / hook'lar
+import { useAuth } from '../hooks/useAuth'
+import PatientCard from '../components/PatientCard'
+
+// 4. Tipler / Interface'ler
+import type { Patient, LoginRequest } from '../types'
+
+// 5. CSS / Stil dosyaları
+import './Login.css'
+```
+
+---
+
+## Performans Kuralları
+
+| Durum | Çözüm |
+|-------|--------|
+| Büyük listeler | `React.memo` veya `useMemo` |
+| Ağır hesaplama | `useMemo` (bağımlılık dizisi ile) |
+| Callback prop geçme | `useCallback` (gereksiz yere kullanma) |
+| Büyük sayfa/remote | `React.lazy` + `Suspense` |
+| Sık re-render | `React.memo` + prop karşılaştırma |
+| Ağır form | Debounce input (`useDebounce` hook) |
+
+### Kod Bölme (Code Splitting)
+```tsx
+// ✅ DOĞRU — Lazy loading
+const Dashboard = React.lazy(() => import('./pages/Dashboard'))
+
+const App = () => (
+  <Suspense fallback={<CircularProgress />}>
+    <Dashboard />
+  </Suspense>
+)
+```
+
+---
+
+## ❌ Yasak Pratikler
+
+1. ❌ `any` tip kullanımı
+2. ❌ Class component
+3. ❌ `dangerouslySetInnerHTML` (kullanıcı girdisi ile)
+4. ❌ `<div onClick>` — `<button>` veya MUI `Button` kullan
+5. ❌ `useEffect` bağımlılık dizisi eksik bırakma
+6. ❌ `catch (e) {}` boş catch bloğu
+7. ❌ Console.log'u üretim kodunda bırakma
+8. ❌ State mutation (spread operator kullan)
+9. ❌ Index'i key olarak kullanma (eğer liste değişkenlik gösteriyorsa)
+10. ❌ Prop drilling (3+ seviye → Context veya state management)

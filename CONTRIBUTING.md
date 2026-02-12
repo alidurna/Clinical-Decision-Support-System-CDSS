@@ -7,17 +7,15 @@ Proje iş bölümü için **3 branch** kullanılıyor. Her branch’i çekip ken
 | Branch | İçerik | Çalışma alanı |
 |--------|--------|----------------|
 | **main** | Ana branch. Tamamlanan özellikler buraya merge edilir. | — |
-| **feature/intro** | **Giriş / tanıtım sayfası** — Projeyi tanıtan, karşılama sayfası. | `apps/shell/src/pages/Home.tsx` |
+| **feature/intro** | **Giriş / tanıtım sayfası** — Projeyi tanıtan karşılama sayfası. | `apps/shell/src/pages/Home.tsx` |
 | **feature/login** | **Giriş yap** — Login sayfası. | `apps/auth/` (Login bileşeni) |
-| **feature/register** | **Kayıt ol** — Kayıt (register) sayfası. | `apps/auth/` (Register bileşeni eklenmeli) |
+| **feature/register** | **Kayıt ol** — Kayıt sayfası. | `apps/auth/` (Register bileşeni) |
 
 ## Çalışma akışı
 
-1. **Branch’i çek:**
-   ```bash
-   git fetch origin
-   git checkout feature/intro    # veya feature/login  veya  feature/register
-   ```
+1. **Branch’i çek:**  
+   `git fetch origin`  
+   `git checkout feature/intro` | `feature/login` | `feature/register`
 
 2. **Geliştirme yap**, commit’le:
    ```bash
@@ -25,12 +23,8 @@ Proje iş bölümü için **3 branch** kullanılıyor. Her branch’i çekip ken
    git commit -m "feat: ..."
    ```
 
-3. **GitHub’a gönder:**
-   ```bash
-   git push origin feature/intro
-   # veya  git push origin feature/login
-   # veya  git push origin feature/register
-   ```
+3. **GitHub’a gönder:**  
+   `git push origin feature/intro` | `feature/login` | `feature/register`
 
 4. **Bitince:** GitHub’da Pull Request aç → `main`’e merge.
 

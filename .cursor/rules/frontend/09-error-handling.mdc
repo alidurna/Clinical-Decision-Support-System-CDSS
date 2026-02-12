@@ -1,0 +1,139 @@
+---
+description: Hata yönetimi kuralları — kullanıcı bildirimi, Error Boundary, fallback, loglama (Google 2026 Standards)
+globs: apps/**/*.tsx,apps/**/*.ts
+alwaysApply: false
+---
+
+# ⚠️ Hata Yönetimi
+
+**Versiyon:** 2.0.0 — Google 2026 Standards
+**Öncelik:** 🔴 P0 — Kritik
+
+---
+
+## Kullanıcı Bildirimi
+
+- Hata mesajı **Türkçe**, **net** ve **aksiyon yönlendirici**.
+- Teknik detay kullanıcıya **gösterilmez** (`Error: ECONNREFUSED` yerine "Bağlantı sağlanamadı").
+- Hata mesajları yapıcı olmalı: ne oldu + ne yapılabilir.
+
+| Durum | Mesaj Örneği | Bileşen |
+|-------|-------------|---------|
+| Form validasyon | "Email formatı geçersiz" | `helperText` |
+| API hatası (400) | "Bilgilerinizi kontrol edin" | `Alert severity="error"` |
+| Kimlik hatası (401) | "Oturum süreniz doldu, lütfen tekrar giriş yapın" | `Snackbar` + redirect |
+| Yetki hatası (403) | "Bu işlem için yetkiniz yok" | `Alert severity="warning"` |
+| Bulunamadı (404) | "İstenen kayıt bulunamadı" | Sayfa içi mesaj |
+| Sunucu hatası (500) | "Bir hata oluştu, lütfen tekrar deneyin" | `Snackbar` |
+| Ağ hatası | "İnternet bağlantınızı kontrol edin" | `Alert` |
+| Boş veri | "Henüz kayıt bulunmuyor" | Empty state bileşeni |
+
+---
+
+## Error Boundary
+
+### Zorunlu Kullanım
+- Her micro frontend kendi `ErrorBoundary` bileşenini sarar.
+- Shell'de genel `ErrorBoundary`; remote yüklenemezse fallback gösterir.
+- **Nested Error Boundary:** Sayfa > Bölüm > Bileşen seviyesinde.
+
+```tsx
+// App seviyesi
+<ErrorBoundary fallback={<FullPageError />}>
+  <Suspense fallback={<FullPageLoading />}>
+    <App />
+  </Suspense>
+</ErrorBoundary>
+
+// Bileşen seviyesi
+<ErrorBoundary fallback={<Alert severity="error">Bu bölüm yüklenemedi.</Alert>}>
+  <Suspense fallback={<Skeleton variant="rectangular" height={200} />}>
+    <RemoteComponent />
+  </Suspense>
+</ErrorBoundary>
+```
+
+### Error Boundary Bileşeni
+```tsx
+class ErrorBoundary extends React.Component<Props, State> {
+  state = { hasError: false, error: null }
+  
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error }
+  }
+  
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    // Hata raporlama servisi (Sentry vb.)
+    logErrorToService(error, info.componentStack)
+  }
+  
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback || <DefaultErrorUI />
+    }
+    return this.props.children
+  }
+}
+```
+
+---
+
+## Loading States (Zorunlu)
+
+| Durum | Göster |
+|-------|--------|
+| Sayfa yükleniyor | `CircularProgress` veya tam sayfa Skeleton |
+| Bölüm yükleniyor | `Skeleton` (rectangular/text/circular) |
+| Buton işleniyor | `disabled` + spinner |
+| Liste yükleniyor | Skeleton x3 satır |
+| Form gönderiliyor | Buton disabled + "Gönderiliyor..." |
+
+---
+
+## Loglama Kuralları
+
+| Ortam | Yöntem |
+|-------|--------|
+| Geliştirme | `console.error` (sadece gerçek hatalar) |
+| Staging | Log servisi (Sentry vb.) |
+| Üretim | Log servisi + alert sistemi |
+
+### Yasak Loglama
+- ❌ Kullanıcı verisini (şifre, TC, telefon) **asla** loglama.
+- ❌ `catch (e) {}` — Boş catch bloğu **yasak**.
+- ❌ `console.log` ile hata yönetimi.
+- ❌ Stack trace'i kullanıcıya gösterme.
+
+### Doğru Loglama
+```tsx
+try {
+  await apiCall()
+} catch (error) {
+  // ✅ Hata servisine raporla
+  logError(error, { context: 'PatientList.fetchPatients' })
+  
+  // ✅ Kullanıcıya anlamlı mesaj göster
+  setError('Hasta listesi yüklenemedi. Lütfen tekrar deneyin.')
+}
+```
+
+---
+
+## Form Hata Yönetimi
+
+```tsx
+// ✅ DOĞRU — Alan bazlı hata
+<TextField
+  label="Email"
+  error={!!errors.email}
+  helperText={errors.email?.message}
+  required
+/>
+
+// ✅ DOĞRU — Form düzeyinde hata
+{formError && (
+  <Alert severity="error" sx={{ mb: 2 }}>
+    {formError}
+  </Alert>
+)}
+```

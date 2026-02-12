@@ -1,0 +1,206 @@
+---
+description: API entegrasyon kuralları — backend iletişimi, hata yönetimi, caching, loading state (Google 2026 Standards)
+globs: apps/**/*.ts,apps/**/*.tsx
+alwaysApply: false
+---
+
+# 🔌 API Entegrasyon Kuralları
+
+**Versiyon:** 2.0.0 — Google 2026 Standards
+**Öncelik:** 🔴 P0 — Kritik
+
+---
+
+## Genel Yapı
+
+- Tüm API çağrıları **`axios` instance** üzerinden yapılır.
+- Her micro frontend kendi API katmanını `src/services/` veya `src/api/` altında tutar.
+- Base URL ortam değişkeninden alınır: `VITE_API_URL` (default: `http://localhost:8080`).
+- **API Gateway** üzerinden tüm istekler yönlendirilir.
+
+```tsx
+// src/api/client.ts
+import axios from 'axios'
+
+const apiClient = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080',
+  timeout: 10000,
+  headers: { 'Content-Type': 'application/json' },
+})
+
+// Interceptor — JWT token ekleme
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
+// Interceptor — Hata yönetimi
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token')
+      window.location.href = '/login'
+    }
+    return Promise.reject(error)
+  }
+)
+
+export default apiClient
+```
+
+---
+
+## Endpoint Yapısı
+
+| Metod | Path | Açıklama |
+|-------|------|----------|
+| `GET` | `/api/patients` | Liste |
+| `GET` | `/api/patients/:id` | Detay |
+| `POST` | `/api/auth/login` | Oluştur / Giriş |
+| `PUT` | `/api/patients/:id` | Güncelle |
+| `DELETE` | `/api/patients/:id` | Sil |
+
+### Kurallar
+- Path: **kebab-case**, **çoğul** isim (`/patients`, `/doctors`).
+- Versiyon: `/api/v1/...` (ileride gerektiğinde).
+- Query params: filtreleme, sıralama, sayfalama için (`?page=1&limit=20&sort=name`).
+
+---
+
+## İstek ve Yanıt Tipleri
+
+- Her istek/yanıt için **TypeScript `interface`** tanımla.
+- Yanıt wrapper'ı tutarlı olsun:
+
+```tsx
+// ✅ DOĞRU — Tip güvenli API çağrısı
+interface LoginRequest {
+  email: string
+  password: string
+}
+
+interface ApiResponse<T> {
+  data: T
+  message: string
+  success: boolean
+}
+
+interface LoginResponse {
+  token: string
+  user: User
+}
+
+const login = async (req: LoginRequest): Promise<LoginResponse> => {
+  const { data } = await apiClient.post<ApiResponse<LoginResponse>>('/api/auth/login', req)
+  return data.data
+}
+```
+
+---
+
+## Hata Yönetimi
+
+Her API çağrısını `try/catch` ile sar. HTTP durum kodlarına göre farklı mesajlar göster:
+
+| Durum Kodu | Aksiyon | Kullanıcı Mesajı |
+|-----------|---------|------------------|
+| 400 | Form validasyonu göster | "Bilgilerinizi kontrol edin" |
+| 401 | Token temizle, login'e yönlendir | "Oturum süresi doldu" |
+| 403 | Yetki uyarısı göster | "Bu işlem için yetkiniz yok" |
+| 404 | Not found bildirimi | "İstenen kayıt bulunamadı" |
+| 409 | Conflict bildir | "Bu kayıt zaten mevcut" |
+| 500 | Genel hata | "Sunucu hatası, lütfen tekrar deneyin" |
+| Network | Bağlantı hatası | "İnternet bağlantınızı kontrol edin" |
+
+```tsx
+const handleSubmit = async () => {
+  setLoading(true)
+  setError(null)
+  try {
+    const result = await login({ email, password })
+    navigate('/dashboard')
+  } catch (err) {
+    if (axios.isAxiosError(err)) {
+      const status = err.response?.status
+      switch (status) {
+        case 401: setError('E-posta veya şifre hatalı.'); break
+        case 403: setError('Bu işlem için yetkiniz yok.'); break
+        case 500: setError('Sunucu hatası, lütfen tekrar deneyin.'); break
+        default: setError('Bir hata oluştu.')
+      }
+    } else {
+      setError('Bağlantı sağlanamadı.')
+    }
+  } finally {
+    setLoading(false)
+  }
+}
+```
+
+---
+
+## Loading State (ZORUNLU)
+
+- Her API çağrısında **`loading` state** tut.
+- Loading sırasında `CircularProgress` veya `Skeleton` göster.
+- Buton loading: **`disabled`** yap + spinner ekle.
+- İç içe loading: yalnızca değişen bölüm için göster (partial loading).
+
+```tsx
+const [loading, setLoading] = useState(false)
+const [error, setError] = useState<string | null>(null)
+const [data, setData] = useState<Patient[] | null>(null)
+
+// Loading durumunda Skeleton göster
+if (loading) return <Skeleton variant="rectangular" height={200} />
+
+// Hata durumunda Alert göster
+if (error) return <Alert severity="error">{error}</Alert>
+
+// Boş veri durumunda Empty State
+if (!data?.length) return <EmptyState message="Henüz kayıt bulunmuyor" />
+```
+
+---
+
+## Request İptal Etme (AbortController)
+
+Uzun süren isteklerde veya component unmount olduğunda isteği iptal et:
+
+```tsx
+useEffect(() => {
+  const controller = new AbortController()
+  
+  const fetchPatients = async () => {
+    try {
+      const { data } = await apiClient.get('/api/patients', {
+        signal: controller.signal
+      })
+      setPatients(data)
+    } catch (err) {
+      if (!axios.isCancel(err)) {
+        setError('Veriler yüklenemedi')
+      }
+    }
+  }
+  
+  fetchPatients()
+  return () => controller.abort()
+}, [])
+```
+
+---
+
+## ❌ API Yasak Pratikler
+
+1. ❌ Base URL'yi hardcode etme
+2. ❌ Token'ı her istekte manuel ekleme (interceptor kullan)
+3. ❌ API çağrısını try/catch olmadan yapma
+4. ❌ Loading state olmadan API çağrısı
+5. ❌ `console.log` ile hata yönetimi
+6. ❌ Kullanıcıya teknik hata mesajı gösterme
+7. ❌ AbortController kullanmadan uzun istekler
